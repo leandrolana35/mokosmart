@@ -9,7 +9,20 @@ interface DashboardPageProps {
 }
 
 export function DashboardPage({ data }: DashboardPageProps) {
-  const { assets, employees } = data
+  const { assets, employees, isLoadingCatalog, catalogError } = data
+
+  if (catalogError) {
+    return (
+      <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-300">
+        Não foi possível carregar o catálogo do backend: {catalogError}. Verifique se o servidor (
+        <code className="font-mono">server/</code>) está rodando.
+      </div>
+    )
+  }
+
+  if (isLoadingCatalog && assets.length === 0 && employees.length === 0) {
+    return <p className="text-sm text-slate-500">Carregando dashboard...</p>
+  }
 
   const totalAssets = assets.length
   const assetsOutOfRange = assets.filter((asset) => asset.isOutOfRange).length

@@ -14,6 +14,6 @@ export interface Beacon {
   txPower: number
   status: BeaconStatus
   lastSeenAt: string | null
-  linkedAssetId?: string
-  linkedEmployeeId?: string
+  linkedAssetId: string | null
+  linkedEmployeeId: string | null
 }

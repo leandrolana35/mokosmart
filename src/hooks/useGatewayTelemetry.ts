@@ -1,4 +1,5 @@
 import { useEffect, useState } from 'react'
+import { fetchMovements } from '../services/api'
 import type { ZoneMovementLog, ZoneReading } from '../services/gatewayService'
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected'
@@ -30,6 +31,32 @@ export function useGatewayTelemetry(options: UseGatewayTelemetryOptions = {}): U
   const [zoneMap, setZoneMap] = useState<ZoneReading[]>([])
   const [movementLog, setMovementLog] = useState<ZoneMovementLog[]>([])
   const [connectionStatus, setConnectionStatus] = useState<ConnectionStatus>('connecting')
+
+  // Hidrata o histórico persistido via REST (sobrevive a reload/restart); mescla com o que
+  // já tiver chegado ao vivo pelo WebSocket em vez de sobrescrever.
+  useEffect(() => {
+    let cancelled = false
+
+    fetchMovements({ limit: 200 })
+      .then((history) => {
+        if (cancelled) return
+        setMovementLog((prev) => {
+          const merged = new Map<string, ZoneMovementLog>()
+          for (const event of history) merged.set(event.id, event)
+          for (const event of prev) merged.set(event.id, event)
+          return Array.from(merged.values())
+            .sort((a, b) => (a.timestamp < b.timestamp ? 1 : -1))
+            .slice(0, 200)
+        })
+      })
+      .catch(() => {
+        // histórico é best-effort; a telemetria ao vivo via WebSocket continua funcionando sem ele
+      })
+
+    return () => {
+      cancelled = true
+    }
+  }, [])
 
   useEffect(() => {
     let socket: WebSocket | null = null

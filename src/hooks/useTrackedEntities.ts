@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef } from 'react'
 import { useGatewayTelemetry, type ConnectionStatus } from './useGatewayTelemetry'
-import { MOCK_ASSETS, MOCK_EMPLOYEES, MOCK_BEACON_RECORDS } from '../services/mockData'
+import { useCatalog } from './useCatalog'
 import { ZONE_INFO, type Zone } from '../types/zone.types'
 import type { Asset, Beacon, Employee } from '../types'
 import type { ZoneMovementLog, ZoneReading } from '../services/gatewayService'
@@ -28,11 +28,22 @@ export interface UseTrackedEntitiesResult {
   movementLog: ZoneMovementLog[]
   isRunning: boolean
   connectionStatus: ConnectionStatus
+  isLoadingCatalog: boolean
+  catalogError: string | null
+  linkBeacon: (assetId: string, mac: string) => Promise<void>
 }
 
-/** Junta a telemetria ao vivo dos Gateways com os registros mock de Ativos/Funcionários/Beacons. */
+/** Junta a telemetria ao vivo dos Gateways com o catálogo de Ativos/Funcionários/Beacons persistido no backend. */
 export function useTrackedEntities(): UseTrackedEntitiesResult {
   const { zoneMap, movementLog, isRunning, connectionStatus } = useGatewayTelemetry()
+  const {
+    assets: catalogAssets,
+    employees: catalogEmployees,
+    beacons,
+    isLoading: isLoadingCatalog,
+    error: catalogError,
+    linkBeacon,
+  } = useCatalog()
   const zoneEnteredAtRef = useRef<Map<string, string>>(new Map())
 
   useEffect(() => {
@@ -49,9 +60,9 @@ export function useTrackedEntities(): UseTrackedEntitiesResult {
   const zoneByMac = useMemo(() => new Map(zoneMap.map((reading) => [reading.mac, reading])), [zoneMap])
 
   const assets = useMemo<TrackedAsset[]>(() => {
-    return MOCK_ASSETS.map((asset) => {
+    return catalogAssets.map((asset) => {
       const reading = asset.beaconId ? zoneByMac.get(asset.beaconId) : undefined
-      const beacon = asset.beaconId ? (MOCK_BEACON_RECORDS.find((b) => b.mac === asset.beaconId) ?? null) : null
+      const beacon = asset.beaconId ? (beacons.find((b) => b.mac === asset.beaconId) ?? null) : null
       return {
         ...asset,
         zone: reading?.zone ?? null,
@@ -60,14 +71,12 @@ export function useTrackedEntities(): UseTrackedEntitiesResult {
         isOutOfRange: Boolean(asset.beaconId) && !reading,
       }
     })
-  }, [zoneByMac])
+  }, [catalogAssets, beacons, zoneByMac])
 
   const employees = useMemo<TrackedEmployee[]>(() => {
-    return MOCK_EMPLOYEES.map((employee) => {
+    return catalogEmployees.map((employee) => {
       const reading = employee.beaconId ? zoneByMac.get(employee.beaconId) : undefined
-      const beacon = employee.beaconId
-        ? (MOCK_BEACON_RECORDS.find((b) => b.mac === employee.beaconId) ?? null)
-        : null
+      const beacon = employee.beaconId ? (beacons.find((b) => b.mac === employee.beaconId) ?? null) : null
       const zone = reading?.zone ?? null
       const restricted = zone ? ZONE_INFO[zone].restricted : false
       const authorized = zone ? (employee.authorizedZones?.includes(zone) ?? false) : true
@@ -81,7 +90,18 @@ export function useTrackedEntities(): UseTrackedEntitiesResult {
         isUnauthorizedInRestrictedZone: restricted && !authorized,
       }
     })
-  }, [zoneByMac])
+  }, [catalogEmployees, beacons, zoneByMac])
 
-  return { assets, employees, beacons: MOCK_BEACON_RECORDS, zoneByMac, movementLog, isRunning, connectionStatus }
+  return {
+    assets,
+    employees,
+    beacons,
+    zoneByMac,
+    movementLog,
+    isRunning,
+    connectionStatus,
+    isLoadingCatalog,
+    catalogError,
+    linkBeacon,
+  }
 }

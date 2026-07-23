@@ -30,32 +30,12 @@ const STATUS_OPTIONS: AssetStatus[] = ['active', 'maintenance', 'lost', 'inactiv
 const LOW_BATTERY_THRESHOLD = 20
 
 export function AssetDashboard({ data }: AssetDashboardProps) {
-  const { assets: baseAssets, beacons, zoneByMac } = data
+  const { assets, isLoadingCatalog, catalogError, linkBeacon } = data
 
   const [search, setSearch] = useState('')
   const [zoneFilter, setZoneFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [modalAsset, setModalAsset] = useState<TrackedAsset | null>(null)
-  const [beaconOverrides, setBeaconOverrides] = useState<Record<string, string>>({})
-
-  const assets = useMemo<TrackedAsset[]>(() => {
-    return baseAssets.map((asset) => {
-      const overrideMac = beaconOverrides[asset.id]
-      if (!overrideMac) return asset
-
-      const beacon = beacons.find((b) => b.mac === overrideMac) ?? null
-      const reading = zoneByMac.get(overrideMac)
-
-      return {
-        ...asset,
-        beaconId: overrideMac,
-        beacon,
-        zone: reading?.zone ?? null,
-        rssi: reading?.rssi ?? null,
-        isOutOfRange: !reading,
-      }
-    })
-  }, [baseAssets, beaconOverrides, beacons, zoneByMac])
 
   const filteredAssets = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -75,9 +55,22 @@ export function AssetDashboard({ data }: AssetDashboardProps) {
   const outOfRange = assets.filter((asset) => asset.isOutOfRange).length
   const lowBattery = assets.filter((asset) => (asset.beacon?.batteryLevel ?? 100) < LOW_BATTERY_THRESHOLD).length
 
-  function handleLinkBeacon(assetId: string, mac: string) {
-    setBeaconOverrides((prev) => ({ ...prev, [assetId]: mac }))
+  async function handleLinkBeacon(assetId: string, mac: string) {
+    await linkBeacon(assetId, mac)
     setModalAsset(null)
+  }
+
+  if (catalogError) {
+    return (
+      <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-300">
+        Não foi possível carregar o catálogo do backend: {catalogError}. Verifique se o servidor (
+        <code className="font-mono">server/</code>) está rodando.
+      </div>
+    )
+  }
+
+  if (isLoadingCatalog && assets.length === 0) {
+    return <p className="text-sm text-slate-500">Carregando ativos...</p>
   }
 
   return (

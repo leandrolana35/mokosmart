@@ -17,7 +17,7 @@ function formatDwell(seconds: number | null): string {
 }
 
 export function EmployeeTracker({ data }: EmployeeTrackerProps) {
-  const { employees, movementLog } = data
+  const { employees, movementLog, isLoadingCatalog, catalogError } = data
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null)
 
   const selectedEmployee = employees.find((employee) => employee.id === selectedEmployeeId) ?? employees[0] ?? null
@@ -26,6 +26,19 @@ export function EmployeeTracker({ data }: EmployeeTrackerProps) {
     if (!selectedEmployee?.beaconId) return []
     return movementLog.filter((event) => event.mac === selectedEmployee.beaconId).slice().reverse()
   }, [movementLog, selectedEmployee])
+
+  if (catalogError) {
+    return (
+      <div className="rounded-lg border border-red-500/30 bg-red-500/10 p-4 text-red-300">
+        Não foi possível carregar o catálogo do backend: {catalogError}. Verifique se o servidor (
+        <code className="font-mono">server/</code>) está rodando.
+      </div>
+    )
+  }
+
+  if (isLoadingCatalog && employees.length === 0) {
+    return <p className="text-sm text-slate-500">Carregando funcionários...</p>
+  }
 
   return (
     <div className="space-y-6">

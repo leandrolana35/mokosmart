@@ -2,8 +2,13 @@ import express from 'express'
 import cors from 'cors'
 import { createServer } from 'node:http'
 import { WebSocketServer, WebSocket } from 'ws'
+import './db.js'
 import { ingestPayload, computeTick } from './telemetryStore.js'
 import type { GatewayPayload, GatewayDeviceReading } from './gatewayService.js'
+import { listAssets, createAsset, updateAssetBeacon } from './repositories/assetsRepo.js'
+import { listEmployees, createEmployee } from './repositories/employeesRepo.js'
+import { listBeacons } from './repositories/beaconsRepo.js'
+import { listMovements } from './repositories/movementsRepo.js'
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000
 const TICK_INTERVAL_MS = 3000
@@ -41,6 +46,62 @@ app.post('/api/telemetry', (req, res) => {
 
   ingestPayload({ gatewaysmac: body.gatewaysmac, devices: body.devices })
   res.status(204).end()
+})
+
+app.get('/api/assets', (_req, res) => {
+  res.json(listAssets())
+})
+
+app.post('/api/assets', (req, res) => {
+  const { name, category, serialNumber, beaconId, status } = req.body ?? {}
+  if (typeof name !== 'string' || typeof category !== 'string' || typeof serialNumber !== 'string') {
+    res.status(400).json({ error: 'Campos obrigatórios: name, category, serialNumber.' })
+    return
+  }
+  res.status(201).json(createAsset({ name, category, serialNumber, beaconId, status }))
+})
+
+app.patch('/api/assets/:id/beacon', (req, res) => {
+  const { beaconId } = req.body ?? {}
+  if (typeof beaconId !== 'string' || beaconId.trim().length === 0) {
+    res.status(400).json({ error: 'Campo obrigatório: beaconId.' })
+    return
+  }
+
+  const updated = updateAssetBeacon(req.params.id, beaconId.trim().toUpperCase())
+  if (!updated) {
+    res.status(404).json({ error: 'Ativo não encontrado.' })
+    return
+  }
+  res.json(updated)
+})
+
+app.get('/api/employees', (_req, res) => {
+  res.json(listEmployees())
+})
+
+app.post('/api/employees', (req, res) => {
+  const { name, registrationNumber, department, role, beaconId, authorizedZones } = req.body ?? {}
+  if (
+    typeof name !== 'string' ||
+    typeof registrationNumber !== 'string' ||
+    typeof department !== 'string' ||
+    typeof role !== 'string'
+  ) {
+    res.status(400).json({ error: 'Campos obrigatórios: name, registrationNumber, department, role.' })
+    return
+  }
+  res.status(201).json(createEmployee({ name, registrationNumber, department, role, beaconId, authorizedZones }))
+})
+
+app.get('/api/beacons', (_req, res) => {
+  res.json(listBeacons())
+})
+
+app.get('/api/movements', (req, res) => {
+  const mac = typeof req.query.mac === 'string' ? req.query.mac : undefined
+  const limit = req.query.limit ? Number(req.query.limit) : undefined
+  res.json(listMovements({ mac, limit }))
 })
 
 const httpServer = createServer(app)

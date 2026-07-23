@@ -12,6 +12,10 @@ dist
 dist-ssr
 *.local
 
+# Banco de dados local do backend (dado de runtime, não versionado)
+server/data/
+.env
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json

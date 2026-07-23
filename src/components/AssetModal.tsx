@@ -5,22 +5,33 @@ import type { TrackedAsset } from '../hooks/useTrackedEntities'
 interface AssetModalProps {
   asset: TrackedAsset | null
   onClose: () => void
-  onSubmit: (assetId: string, mac: string) => void
+  onSubmit: (assetId: string, mac: string) => Promise<void>
 }
 
 export function AssetModal({ asset, onClose, onSubmit }: AssetModalProps) {
   const [mac, setMac] = useState('')
+  const [isSubmitting, setIsSubmitting] = useState(false)
+  const [error, setError] = useState<string | null>(null)
 
   if (!asset) return null
 
   const assetId = asset.id
 
-  function handleSubmit(event: FormEvent) {
+  async function handleSubmit(event: FormEvent) {
     event.preventDefault()
     const trimmed = mac.trim().toUpperCase()
     if (!trimmed) return
-    onSubmit(assetId, trimmed)
-    setMac('')
+
+    setIsSubmitting(true)
+    setError(null)
+    try {
+      await onSubmit(assetId, trimmed)
+      setMac('')
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Falha ao vincular beacon.')
+    } finally {
+      setIsSubmitting(false)
+    }
   }
 
   return (
@@ -57,6 +68,8 @@ export function AssetModal({ asset, onClose, onSubmit }: AssetModalProps) {
             />
           </div>
 
+          {error && <p className="text-xs text-red-400">{error}</p>}
+
           <div className="flex justify-end gap-3">
             <button
               type="button"
@@ -67,9 +80,10 @@ export function AssetModal({ asset, onClose, onSubmit }: AssetModalProps) {
             </button>
             <button
               type="submit"
-              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+              disabled={isSubmitting}
+              className="rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors disabled:opacity-50"
             >
-              Vincular
+              {isSubmitting ? 'Vinculando...' : 'Vincular'}
             </button>
           </div>
         </form>
