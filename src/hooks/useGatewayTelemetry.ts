@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react'
 import { fetchMovements } from '../services/api'
+import { getToken } from '../services/auth'
 import type { ZoneMovementLog, ZoneReading } from '../services/gatewayService'
 
 export type ConnectionStatus = 'connecting' | 'connected' | 'disconnected'
@@ -65,7 +66,9 @@ export function useGatewayTelemetry(options: UseGatewayTelemetryOptions = {}): U
 
     function connect() {
       setConnectionStatus('connecting')
-      socket = new WebSocket(url)
+      const token = getToken()
+      const socketUrl = token ? `${url}?token=${encodeURIComponent(token)}` : url
+      socket = new WebSocket(socketUrl)
 
       socket.onopen = () => {
         if (!cancelled) setConnectionStatus('connected')

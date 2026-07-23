@@ -1,9 +1,10 @@
-import { Bell, UserCircle } from 'lucide-react'
+import { Bell, UserCircle, LogOut } from 'lucide-react'
 import type { ConnectionStatus } from '../hooks/useGatewayTelemetry'
 
 interface TopbarProps {
   title: string
   connectionStatus?: ConnectionStatus
+  onLogout?: () => void
 }
 
 const STATUS_CONFIG: Record<ConnectionStatus, { label: string; dot: string; text: string; bg: string }> = {
@@ -27,7 +28,7 @@ const STATUS_CONFIG: Record<ConnectionStatus, { label: string; dot: string; text
   },
 }
 
-export function Topbar({ title, connectionStatus }: TopbarProps) {
+export function Topbar({ title, connectionStatus, onLogout }: TopbarProps) {
   const status = connectionStatus ? STATUS_CONFIG[connectionStatus] : null
 
   return (
@@ -52,6 +53,17 @@ export function Topbar({ title, connectionStatus }: TopbarProps) {
           <UserCircle className="size-6" />
           <span className="text-sm font-medium">Usuário</span>
         </div>
+        {onLogout && (
+          <button
+            type="button"
+            onClick={onLogout}
+            className="text-slate-400 hover:text-white transition-colors"
+            aria-label="Sair"
+            title="Sair"
+          >
+            <LogOut className="size-5" />
+          </button>
+        )}
       </div>
     </header>
   )

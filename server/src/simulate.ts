@@ -3,9 +3,11 @@
 // Serve para testar o pipeline completo (HTTP -> servidor -> WebSocket -> frontend)
 // antes de ter hardware real em campo. Rode com: npm run simulate (dentro de server/).
 
+import './loadEnv.js'
 import { GATEWAY_CONFIG } from './config/gateways.js'
 
 const SERVER_URL = process.env.TELEMETRY_URL ?? 'http://localhost:4000/api/telemetry'
+const GATEWAY_INGEST_TOKEN = process.env.GATEWAY_INGEST_TOKEN
 const TICK_MS = 4000
 
 interface MockBeacon {
@@ -54,7 +56,10 @@ async function tick(): Promise<void> {
     try {
       await fetch(SERVER_URL, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
+        headers: {
+          'Content-Type': 'application/json',
+          ...(GATEWAY_INGEST_TOKEN ? { Authorization: `Bearer ${GATEWAY_INGEST_TOKEN}` } : {}),
+        },
         body: JSON.stringify({ gatewaysmac: gateway.mac, devices }),
       })
     } catch (err) {

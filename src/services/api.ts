@@ -1,5 +1,6 @@
 import type { Asset, Beacon, Employee } from '../types'
 import type { ZoneMovementLog } from './gatewayService'
+import { getToken, clearToken } from './auth'
 
 // O backend não guarda `currentLocation`/`lastSeenAt` — esses campos são derivados ao vivo
 // da telemetria em useTrackedEntities. Os DTOs refletem exatamente o que a API retorna.
@@ -9,11 +10,25 @@ export type BeaconDto = Omit<Beacon, 'lastSeenAt'>
 
 const API_URL = (import.meta.env.VITE_API_URL as string | undefined) ?? 'http://localhost:4000'
 
+/** Dispara quando a API rejeita o token — useAuth escuta isso pra voltar à tela de login. */
+export const UNAUTHORIZED_EVENT = 'mokosmart:unauthorized'
+
 async function request<T>(path: string, init?: RequestInit): Promise<T> {
+  const token = getToken()
+
   const res = await fetch(`${API_URL}${path}`, {
     ...init,
-    headers: { 'Content-Type': 'application/json', ...init?.headers },
+    headers: {
+      'Content-Type': 'application/json',
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      ...init?.headers,
+    },
   })
+
+  if (res.status === 401) {
+    clearToken()
+    window.dispatchEvent(new Event(UNAUTHORIZED_EVENT))
+  }
 
   if (!res.ok) {
     const body = await res.json().catch(() => null)
