@@ -1,6 +1,12 @@
-import type { Asset, Beacon, Employee } from '../types'
+import type { Asset, AssetStatus, Beacon, Employee } from '../types'
 import type { ZoneMovementLog } from './gatewayService'
 import { getToken, clearToken } from './auth'
+
+export interface GatewayDto {
+  mac: string
+  name: string
+  zone: string
+}
 
 // O backend não guarda `currentLocation`/`lastSeenAt` — esses campos são derivados ao vivo
 // da telemetria em useTrackedEntities. Os DTOs refletem exatamente o que a API retorna.
@@ -64,4 +70,49 @@ export function linkAssetBeacon(assetId: string, beaconId: string): Promise<Asse
     method: 'PATCH',
     body: JSON.stringify({ beaconId }),
   })
+}
+
+export interface CreateAssetInput {
+  name: string
+  category: string
+  serialNumber: string
+  status?: AssetStatus
+}
+
+export function createAsset(input: CreateAssetInput): Promise<AssetDto> {
+  return request<AssetDto>('/api/assets', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export interface CreateEmployeeInput {
+  name: string
+  registrationNumber: string
+  department: string
+  role: string
+  authorizedZones?: string[]
+}
+
+export function createEmployee(input: CreateEmployeeInput): Promise<EmployeeDto> {
+  return request<EmployeeDto>('/api/employees', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export function fetchGateways(): Promise<GatewayDto[]> {
+  return request<GatewayDto[]>('/api/gateways')
+}
+
+export interface CreateGatewayInput {
+  mac: string
+  name: string
+  zone: string
+}
+
+export function createGateway(input: CreateGatewayInput): Promise<GatewayDto> {
+  return request<GatewayDto>('/api/gateways', { method: 'POST', body: JSON.stringify(input) })
+}
+
+export function updateGatewayZone(mac: string, zone: string): Promise<GatewayDto> {
+  return request<GatewayDto>(`/api/gateways/${mac}/zone`, { method: 'PATCH', body: JSON.stringify({ zone }) })
+}
+
+export function deleteGateway(mac: string): Promise<void> {
+  return request<void>(`/api/gateways/${mac}`, { method: 'DELETE' })
 }

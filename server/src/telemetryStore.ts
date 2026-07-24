@@ -1,6 +1,6 @@
-import { GATEWAY_ZONE_MAP } from './config/gateways.js'
 import { resolveZones, buildMovementLog, type GatewayPayload, type ZoneReading, type ZoneMovementLog } from './gatewayService.js'
 import { insertMovements, getLatestZonePerMac } from './repositories/movementsRepo.js'
+import { getGatewayZoneMap } from './repositories/gatewaysRepo.js'
 
 // Se um Gateway não reportar nada nesse intervalo, seus dados somem do cálculo de zona
 // (evita manter um dispositivo "grudado" numa zona antiga por tempo indefinido).
@@ -32,7 +32,7 @@ export function computeTick(): TelemetryTick {
     .filter((entry) => now - entry.receivedAt <= STALE_AFTER_MS)
     .map((entry) => entry.payload)
 
-  const zonesMap = resolveZones(freshPayloads, GATEWAY_ZONE_MAP)
+  const zonesMap = resolveZones(freshPayloads, getGatewayZoneMap())
   const movements = buildMovementLog(zonesMap, previousZones)
 
   previousZones = new Map(Array.from(zonesMap.values()).map((reading) => [reading.mac, reading.zone]))

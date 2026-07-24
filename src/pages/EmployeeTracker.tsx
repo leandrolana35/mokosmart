@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react'
-import { Clock } from 'lucide-react'
+import { Clock, Plus } from 'lucide-react'
 import { RestrictedZoneAlert } from '../components/RestrictedZoneAlert'
 import { MovementHistory } from '../components/MovementHistory'
+import { CreateEmployeeModal } from '../components/CreateEmployeeModal'
 import { ZONES, ZONE_INFO } from '../types/zone.types'
 import type { UseTrackedEntitiesResult } from '../hooks/useTrackedEntities'
 
@@ -17,8 +18,9 @@ function formatDwell(seconds: number | null): string {
 }
 
 export function EmployeeTracker({ data }: EmployeeTrackerProps) {
-  const { employees, movementLog, isLoadingCatalog, catalogError } = data
+  const { employees, movementLog, isLoadingCatalog, catalogError, createEmployee } = data
   const [selectedEmployeeId, setSelectedEmployeeId] = useState<string | null>(null)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
 
   const selectedEmployee = employees.find((employee) => employee.id === selectedEmployeeId) ?? employees[0] ?? null
 
@@ -42,6 +44,17 @@ export function EmployeeTracker({ data }: EmployeeTrackerProps) {
 
   return (
     <div className="space-y-6">
+      <div className="flex justify-end">
+        <button
+          type="button"
+          onClick={() => setIsCreateOpen(true)}
+          className="flex items-center gap-1.5 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+        >
+          <Plus className="size-4" />
+          Novo Funcionário
+        </button>
+      </div>
+
       <RestrictedZoneAlert employees={employees} />
 
       <div className="grid grid-cols-1 gap-4 lg:grid-cols-3">
@@ -101,6 +114,8 @@ export function EmployeeTracker({ data }: EmployeeTrackerProps) {
 
         <MovementHistory events={employeeEvents} />
       </div>
+
+      <CreateEmployeeModal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} onSubmit={createEmployee} />
     </div>
   )
 }

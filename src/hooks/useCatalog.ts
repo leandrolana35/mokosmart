@@ -1,5 +1,14 @@
 import { useCallback, useEffect, useState } from 'react'
-import { fetchAssets, fetchEmployees, fetchBeacons, linkAssetBeacon } from '../services/api'
+import {
+  fetchAssets,
+  fetchEmployees,
+  fetchBeacons,
+  linkAssetBeacon,
+  createAsset as apiCreateAsset,
+  createEmployee as apiCreateEmployee,
+  type CreateAssetInput,
+  type CreateEmployeeInput,
+} from '../services/api'
 import type { Asset, Beacon, Employee } from '../types'
 
 interface UseCatalogResult {
@@ -9,6 +18,8 @@ interface UseCatalogResult {
   isLoading: boolean
   error: string | null
   linkBeacon: (assetId: string, mac: string) => Promise<void>
+  createAsset: (input: CreateAssetInput) => Promise<void>
+  createEmployee: (input: CreateEmployeeInput) => Promise<void>
 }
 
 /** Busca o catálogo de Ativos/Funcionários/Beacons persistido no backend (server/). */
@@ -49,5 +60,15 @@ export function useCatalog(): UseCatalogResult {
     setAssets((prev) => prev.map((asset) => (asset.id === assetId ? { ...updated, currentLocation: null } : asset)))
   }, [])
 
-  return { assets, employees, beacons, isLoading, error, linkBeacon }
+  const createAsset = useCallback(async (input: CreateAssetInput) => {
+    const created = await apiCreateAsset(input)
+    setAssets((prev) => [...prev, { ...created, currentLocation: null }])
+  }, [])
+
+  const createEmployee = useCallback(async (input: CreateEmployeeInput) => {
+    const created = await apiCreateEmployee(input)
+    setEmployees((prev) => [...prev, { ...created, currentLocation: null }])
+  }, [])
+
+  return { assets, employees, beacons, isLoading, error, linkBeacon, createAsset, createEmployee }
 }

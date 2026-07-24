@@ -1,8 +1,9 @@
 import { useMemo, useState } from 'react'
-import { Battery, BatteryLow, Package, Wrench, WifiOff } from 'lucide-react'
+import { Battery, BatteryLow, Package, Plus, Wrench, WifiOff } from 'lucide-react'
 import { KpiCard } from '../components/KpiCard'
 import { Badge } from '../components/Badge'
 import { AssetModal } from '../components/AssetModal'
+import { CreateAssetModal } from '../components/CreateAssetModal'
 import { ZONES } from '../types/zone.types'
 import type { AssetStatus } from '../types'
 import type { TrackedAsset, UseTrackedEntitiesResult } from '../hooks/useTrackedEntities'
@@ -30,12 +31,13 @@ const STATUS_OPTIONS: AssetStatus[] = ['active', 'maintenance', 'lost', 'inactiv
 const LOW_BATTERY_THRESHOLD = 20
 
 export function AssetDashboard({ data }: AssetDashboardProps) {
-  const { assets, beacons, zoneByMac, isLoadingCatalog, catalogError, linkBeacon } = data
+  const { assets, beacons, zoneByMac, isLoadingCatalog, catalogError, linkBeacon, createAsset } = data
 
   const [search, setSearch] = useState('')
   const [zoneFilter, setZoneFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [modalAsset, setModalAsset] = useState<TrackedAsset | null>(null)
+  const [isCreateOpen, setIsCreateOpen] = useState(false)
 
   // Dispositivos que algum Gateway está enxergando agora, mas que ainda não correspondem
   // a nenhum Beacon já cadastrado — candidatos prováveis pra vincular a um novo ativo.
@@ -96,6 +98,14 @@ export function AssetDashboard({ data }: AssetDashboardProps) {
           placeholder="Buscar por nome ou patrimônio..."
           className="flex-1 min-w-48 rounded-md border border-slate-700 bg-slate-900 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-blue-500 focus:outline-none"
         />
+        <button
+          type="button"
+          onClick={() => setIsCreateOpen(true)}
+          className="flex items-center gap-1.5 rounded-md bg-blue-600 px-4 py-2 text-sm font-medium text-white hover:bg-blue-700 transition-colors"
+        >
+          <Plus className="size-4" />
+          Novo Ativo
+        </button>
         <select
           value={zoneFilter}
           onChange={(event) => setZoneFilter(event.target.value)}
@@ -191,6 +201,7 @@ export function AssetDashboard({ data }: AssetDashboardProps) {
         onSubmit={handleLinkBeacon}
         unrecognizedDevices={unrecognizedDevices}
       />
+      <CreateAssetModal open={isCreateOpen} onClose={() => setIsCreateOpen(false)} onSubmit={createAsset} />
     </div>
   )
 }

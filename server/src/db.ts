@@ -50,6 +50,12 @@ db.exec(`
     authorized_zones TEXT NOT NULL DEFAULT '[]'
   );
 
+  CREATE TABLE IF NOT EXISTS gateways (
+    mac TEXT PRIMARY KEY,
+    name TEXT NOT NULL,
+    zone TEXT NOT NULL
+  );
+
   CREATE TABLE IF NOT EXISTS movements (
     id TEXT PRIMARY KEY,
     mac TEXT NOT NULL,
@@ -139,4 +145,17 @@ function seedIfEmpty(): void {
   )
 }
 
+function seedGatewaysIfEmpty(): void {
+  const { count } = db.prepare('SELECT COUNT(*) as count FROM gateways').get() as { count: number }
+  if (count > 0) return
+
+  const insertGateway = db.prepare('INSERT INTO gateways (mac, name, zone) VALUES (?, ?, ?)')
+  // Preserva o Gateway real já configurado nesta sessão; os outros dois são placeholders
+  // (edite ou apague pela tela de Gateways quando tiver o hardware correspondente).
+  insertGateway.run('fce8c0428d80', 'Gateway Escritório', 'Escritório')
+  insertGateway.run('ac233fa00001', 'Gateway Almoxarifado (exemplo)', 'Almoxarifado')
+  insertGateway.run('ac233fa00002', 'Gateway Oficina (exemplo)', 'Oficina')
+}
+
 seedIfEmpty()
+seedGatewaysIfEmpty()

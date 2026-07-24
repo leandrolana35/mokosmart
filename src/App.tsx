@@ -4,6 +4,7 @@ import { type PageKey } from './components/navigation'
 import { DashboardPage } from './pages/DashboardPage'
 import { AssetDashboard } from './pages/AssetDashboard'
 import { EmployeeTracker } from './pages/EmployeeTracker'
+import { GatewaysPage } from './pages/GatewaysPage'
 import { BLEScannerPage } from './pages/BLEScannerPage'
 import { LoginPage } from './pages/LoginPage'
 import { useTrackedEntities } from './hooks/useTrackedEntities'
@@ -13,6 +14,7 @@ const PAGE_TITLES: Record<PageKey, string> = {
   dashboard: 'Dashboard Geral',
   assets: 'Controle de Ativos Imobilizados',
   employees: 'Movimentação de Funcionários',
+  gateways: 'Gateways',
   'ble-audit': 'Auditoria BLE Local',
 }
 
@@ -37,6 +39,7 @@ function AuthenticatedApp({ onLogout }: AuthenticatedAppProps) {
       {activePage === 'dashboard' && <DashboardPage data={tracked} />}
       {activePage === 'assets' && <AssetDashboard data={tracked} />}
       {activePage === 'employees' && <EmployeeTracker data={tracked} />}
+      {activePage === 'gateways' && <GatewaysPage />}
       {activePage === 'ble-audit' && <BLEScannerPage />}
     </Layout>
   )

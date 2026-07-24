@@ -10,6 +10,7 @@ import { listAssets, createAsset, updateAssetBeacon } from './repositories/asset
 import { listEmployees, createEmployee } from './repositories/employeesRepo.js'
 import { listBeacons } from './repositories/beaconsRepo.js'
 import { listMovements } from './repositories/movementsRepo.js'
+import { listGateways, createGateway, updateGatewayZone, deleteGateway } from './repositories/gatewaysRepo.js'
 import { isAuthConfigured, verifyCredentials, issueToken, requireAuth, requireGatewayToken, verifyToken } from './auth.js'
 import { startMqttBroker } from './mqtt/broker.js'
 
@@ -139,6 +140,46 @@ app.get('/api/movements', requireAuth, (req, res) => {
   const mac = typeof req.query.mac === 'string' ? req.query.mac : undefined
   const limit = req.query.limit ? Number(req.query.limit) : undefined
   res.json(listMovements({ mac, limit }))
+})
+
+app.get('/api/gateways', requireAuth, (_req, res) => {
+  res.json(listGateways())
+})
+
+app.post('/api/gateways', requireAuth, (req, res) => {
+  const { mac, name, zone } = req.body ?? {}
+  if (typeof mac !== 'string' || mac.trim().length === 0 || typeof name !== 'string' || typeof zone !== 'string') {
+    res.status(400).json({ error: 'Campos obrigatórios: mac, name, zone.' })
+    return
+  }
+  try {
+    res.status(201).json(createGateway({ mac, name, zone }))
+  } catch {
+    res.status(409).json({ error: 'Já existe um Gateway cadastrado com esse MAC.' })
+  }
+})
+
+app.patch('/api/gateways/:mac/zone', requireAuth, (req, res) => {
+  const { zone } = req.body ?? {}
+  if (typeof zone !== 'string' || zone.trim().length === 0) {
+    res.status(400).json({ error: 'Campo obrigatório: zone.' })
+    return
+  }
+  const updated = updateGatewayZone(req.params.mac, zone)
+  if (!updated) {
+    res.status(404).json({ error: 'Gateway não encontrado.' })
+    return
+  }
+  res.json(updated)
+})
+
+app.delete('/api/gateways/:mac', requireAuth, (req, res) => {
+  const deleted = deleteGateway(req.params.mac)
+  if (!deleted) {
+    res.status(404).json({ error: 'Gateway não encontrado.' })
+    return
+  }
+  res.status(204).end()
 })
 
 const httpServer = createServer(app)

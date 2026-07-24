@@ -4,6 +4,7 @@ import { useCatalog } from './useCatalog'
 import { ZONE_INFO, type Zone } from '../types/zone.types'
 import type { Asset, Beacon, Employee } from '../types'
 import type { ZoneMovementLog, ZoneReading } from '../services/gatewayService'
+import type { CreateAssetInput, CreateEmployeeInput } from '../services/api'
 
 export interface TrackedAsset extends Asset {
   zone: Zone | null
@@ -31,6 +32,8 @@ export interface UseTrackedEntitiesResult {
   isLoadingCatalog: boolean
   catalogError: string | null
   linkBeacon: (assetId: string, mac: string) => Promise<void>
+  createAsset: (input: CreateAssetInput) => Promise<void>
+  createEmployee: (input: CreateEmployeeInput) => Promise<void>
 }
 
 /** Junta a telemetria ao vivo dos Gateways com o catálogo de Ativos/Funcionários/Beacons persistido no backend. */
@@ -43,6 +46,8 @@ export function useTrackedEntities(): UseTrackedEntitiesResult {
     isLoading: isLoadingCatalog,
     error: catalogError,
     linkBeacon,
+    createAsset,
+    createEmployee,
   } = useCatalog()
   const zoneEnteredAtRef = useRef<Map<string, string>>(new Map())
 
@@ -103,5 +108,7 @@ export function useTrackedEntities(): UseTrackedEntitiesResult {
     isLoadingCatalog,
     catalogError,
     linkBeacon,
+    createAsset,
+    createEmployee,
   }
 }
