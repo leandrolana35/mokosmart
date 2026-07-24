@@ -6,16 +6,19 @@
   "scripts": {
     "dev": "tsx watch src/index.ts",
     "simulate": "tsx watch src/simulate.ts",
+    "simulate:mqtt": "tsx watch src/simulate-mqtt.ts",
     "hash-password": "tsx src/scripts/hashPassword.ts",
     "test": "node --import tsx --test src/**/*.test.ts",
     "build": "tsc -p tsconfig.json",
     "start": "node dist/index.js"
   },
   "dependencies": {
+    "aedes": "^1.1.1",
     "bcryptjs": "^3.0.3",
     "cors": "^2.8.5",
     "express": "^4.21.2",
     "jsonwebtoken": "^9.0.3",
+    "mqtt": "^5.15.2",
     "ws": "^8.18.0"
   },
   "devDependencies": {

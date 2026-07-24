@@ -69,11 +69,11 @@ function seedIfEmpty(): void {
   const now = new Date().toISOString()
 
   const beacons = [
-    { mac: 'FF233DA11223', name: 'Furadeira Industrial #12', type: 'asset', battery: 82 },
-    { mac: 'FF233DA11224', name: 'Notebook Dell #08', type: 'asset', battery: 45 },
-    { mac: 'FF233DA11225', name: 'Empilhadeira Elétrica #03', type: 'asset', battery: 12 },
-    { mac: 'AA112233CC01', name: 'Crachá - João Silva', type: 'employee', battery: 67 },
-    { mac: 'AA112233CC02', name: 'Crachá - Maria Souza', type: 'employee', battery: 90 },
+    { mac: 'ff233da11223', name: 'Furadeira Industrial #12', type: 'asset', battery: 82 },
+    { mac: 'ff233da11224', name: 'Notebook Dell #08', type: 'asset', battery: 45 },
+    { mac: 'ff233da11225', name: 'Empilhadeira Elétrica #03', type: 'asset', battery: 12 },
+    { mac: 'aa112233cc01', name: 'Crachá - João Silva', type: 'employee', battery: 67 },
+    { mac: 'aa112233cc02', name: 'Crachá - Maria Souza', type: 'employee', battery: 90 },
   ]
 
   const insertBeacon = db.prepare(
@@ -99,14 +99,14 @@ function seedIfEmpty(): void {
     `INSERT INTO assets (id, name, category, serial_number, beacon_id, status, assigned_to_employee_id, created_at, updated_at)
      VALUES (?, ?, ?, ?, ?, ?, NULL, ?, ?)`,
   )
-  insertAsset.run('asset-1', 'Furadeira Industrial #12', 'Ferramenta', 'PAT-0012', 'FF233DA11223', 'active', now, now)
-  insertAsset.run('asset-2', 'Notebook Dell #08', 'Equipamento de TI', 'PAT-0008', 'FF233DA11224', 'active', now, now)
+  insertAsset.run('asset-1', 'Furadeira Industrial #12', 'Ferramenta', 'PAT-0012', 'ff233da11223', 'active', now, now)
+  insertAsset.run('asset-2', 'Notebook Dell #08', 'Equipamento de TI', 'PAT-0008', 'ff233da11224', 'active', now, now)
   insertAsset.run(
     'asset-3',
     'Empilhadeira Elétrica #03',
     'Máquina',
     'PAT-0003',
-    'FF233DA11225',
+    'ff233da11225',
     'maintenance',
     now,
     now,
@@ -123,7 +123,7 @@ function seedIfEmpty(): void {
     'F-0001',
     'Manutenção',
     'Técnico Industrial',
-    'AA112233CC01',
+    'aa112233cc01',
     'active',
     JSON.stringify(['Almoxarifado', 'Oficina', 'Escritório']),
   )
@@ -133,7 +133,7 @@ function seedIfEmpty(): void {
     'F-0002',
     'Administrativo',
     'Analista de Estoque',
-    'AA112233CC02',
+    'aa112233cc02',
     'active',
     JSON.stringify(['Escritório', 'Almoxarifado']),
   )

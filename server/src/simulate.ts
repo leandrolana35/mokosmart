@@ -16,11 +16,11 @@ interface MockBeacon {
 }
 
 const MOCK_BEACONS: MockBeacon[] = [
-  { mac: 'FF233DA11223', label: 'Furadeira Industrial #12' },
-  { mac: 'FF233DA11224', label: 'Notebook Dell #08' },
-  { mac: 'FF233DA11225', label: 'Empilhadeira Elétrica #03' },
-  { mac: 'AA112233CC01', label: 'Crachá - João Silva' },
-  { mac: 'AA112233CC02', label: 'Crachá - Maria Souza' },
+  { mac: 'ff233da11223', label: 'Furadeira Industrial #12' },
+  { mac: 'ff233da11224', label: 'Notebook Dell #08' },
+  { mac: 'ff233da11225', label: 'Empilhadeira Elétrica #03' },
+  { mac: 'aa112233cc01', label: 'Crachá - João Silva' },
+  { mac: 'aa112233cc02', label: 'Crachá - Maria Souza' },
 ]
 
 const zones = GATEWAY_CONFIG.map((gateway) => gateway.zone)

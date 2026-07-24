@@ -11,6 +11,7 @@ import { listEmployees, createEmployee } from './repositories/employeesRepo.js'
 import { listBeacons } from './repositories/beaconsRepo.js'
 import { listMovements } from './repositories/movementsRepo.js'
 import { isAuthConfigured, verifyCredentials, issueToken, requireAuth, requireGatewayToken, verifyToken } from './auth.js'
+import { startMqttBroker } from './mqtt/broker.js'
 
 const PORT = process.env.PORT ? Number(process.env.PORT) : 4000
 const CORS_ORIGIN = process.env.CORS_ORIGIN ?? 'http://localhost:5173'
@@ -77,7 +78,10 @@ app.post('/api/telemetry', requireGatewayToken, (req, res) => {
     return
   }
 
-  ingestPayload({ gatewaysmac: body.gatewaysmac, devices: body.devices })
+  ingestPayload({
+    gatewaysmac: body.gatewaysmac.toLowerCase(),
+    devices: body.devices.map((device) => ({ mac: device.mac.toLowerCase(), rssi: device.rssi })),
+  })
   res.status(204).end()
 })
 
@@ -101,7 +105,7 @@ app.patch('/api/assets/:id/beacon', requireAuth, (req, res) => {
     return
   }
 
-  const updated = updateAssetBeacon(req.params.id, beaconId.trim().toUpperCase())
+  const updated = updateAssetBeacon(req.params.id, beaconId.trim().toLowerCase())
   if (!updated) {
     res.status(404).json({ error: 'Ativo não encontrado.' })
     return
@@ -172,9 +176,13 @@ setInterval(() => {
 
 httpServer.listen(PORT, () => {
   console.log(`MokoSmart backend rodando em http://localhost:${PORT}`)
-  console.log(`Endpoint de ingestão: POST http://localhost:${PORT}/api/telemetry`)
+  console.log(`Endpoint de ingestão (demo/HTTP): POST http://localhost:${PORT}/api/telemetry`)
   console.log(`WebSocket disponível em ws://localhost:${PORT}/ws`)
   if (!isAuthConfigured()) {
     console.warn('[auth] JWT_SECRET/ADMIN_USERNAME/ADMIN_PASSWORD_HASH não configurados — API rodando SEM login (modo dev).')
   }
+})
+
+startMqttBroker().catch((err: unknown) => {
+  console.error('[mqtt] falha ao iniciar o broker:', err)
 })
