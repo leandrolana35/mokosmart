@@ -1,17 +1,27 @@
-import { useState, type FormEvent } from 'react'
-import { X } from 'lucide-react'
+import { useMemo, useState, type FormEvent } from 'react'
+import { X, Radio } from 'lucide-react'
 import type { TrackedAsset } from '../hooks/useTrackedEntities'
+import type { ZoneReading } from '../services/gatewayService'
 
 interface AssetModalProps {
   asset: TrackedAsset | null
   onClose: () => void
   onSubmit: (assetId: string, mac: string) => Promise<void>
+  /** Dispositivos vistos pelos Gateways que ainda não estão vinculados a nenhum Beacon conhecido. */
+  unrecognizedDevices: ZoneReading[]
 }
 
-export function AssetModal({ asset, onClose, onSubmit }: AssetModalProps) {
+export function AssetModal({ asset, onClose, onSubmit, unrecognizedDevices }: AssetModalProps) {
   const [mac, setMac] = useState('')
+  const [filter, setFilter] = useState('')
   const [isSubmitting, setIsSubmitting] = useState(false)
   const [error, setError] = useState<string | null>(null)
+
+  const filteredDevices = useMemo(() => {
+    const term = filter.trim().toLowerCase()
+    const list = term ? unrecognizedDevices.filter((device) => device.mac.includes(term)) : unrecognizedDevices
+    return list.slice().sort((a, b) => b.rssi - a.rssi)
+  }, [unrecognizedDevices, filter])
 
   if (!asset) return null
 
@@ -19,7 +29,7 @@ export function AssetModal({ asset, onClose, onSubmit }: AssetModalProps) {
 
   async function handleSubmit(event: FormEvent) {
     event.preventDefault()
-    const trimmed = mac.trim().toUpperCase()
+    const trimmed = mac.trim().toLowerCase()
     if (!trimmed) return
 
     setIsSubmitting(true)
@@ -62,10 +72,54 @@ export function AssetModal({ asset, onClose, onSubmit }: AssetModalProps) {
               id="beacon-mac"
               value={mac}
               onChange={(event) => setMac(event.target.value)}
-              placeholder="FF233DA11223"
-              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-blue-500 focus:outline-none"
+              placeholder="ff233da11223"
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-blue-500 focus:outline-none font-mono"
               autoFocus
             />
+          </div>
+
+          <div>
+            <div className="flex items-center justify-between mb-1">
+              <label htmlFor="device-filter" className="block text-xs font-medium text-slate-400">
+                Dispositivos detectados sem vínculo
+              </label>
+              <span className="text-xs text-slate-600">{unrecognizedDevices.length} no total</span>
+            </div>
+            <input
+              id="device-filter"
+              value={filter}
+              onChange={(event) => setFilter(event.target.value)}
+              placeholder="Buscar por MAC..."
+              className="w-full rounded-md border border-slate-700 bg-slate-950 px-3 py-2 text-sm text-white placeholder:text-slate-600 focus:border-blue-500 focus:outline-none font-mono mb-2"
+            />
+
+            <div className="max-h-40 overflow-y-auto rounded-md border border-slate-800 divide-y divide-slate-800">
+              {filteredDevices.length === 0 && (
+                <p className="p-3 text-xs text-slate-600">
+                  {unrecognizedDevices.length === 0
+                    ? 'Nenhum dispositivo não vinculado detectado ainda.'
+                    : 'Nenhum resultado para essa busca.'}
+                </p>
+              )}
+              {filteredDevices.map((device) => (
+                <button
+                  key={device.mac}
+                  type="button"
+                  onClick={() => setMac(device.mac)}
+                  className={`w-full flex items-center justify-between px-3 py-2 text-left text-xs transition-colors hover:bg-slate-800 ${
+                    mac === device.mac ? 'bg-blue-500/10' : ''
+                  }`}
+                >
+                  <span className="flex items-center gap-2 font-mono text-slate-200">
+                    <Radio className="size-3 text-slate-500" />
+                    {device.mac}
+                  </span>
+                  <span className="text-slate-500">
+                    {device.zone} · {device.rssi} dBm
+                  </span>
+                </button>
+              ))}
+            </div>
           </div>
 
           {error && <p className="text-xs text-red-400">{error}</p>}

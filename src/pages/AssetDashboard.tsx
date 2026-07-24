@@ -30,12 +30,19 @@ const STATUS_OPTIONS: AssetStatus[] = ['active', 'maintenance', 'lost', 'inactiv
 const LOW_BATTERY_THRESHOLD = 20
 
 export function AssetDashboard({ data }: AssetDashboardProps) {
-  const { assets, isLoadingCatalog, catalogError, linkBeacon } = data
+  const { assets, beacons, zoneByMac, isLoadingCatalog, catalogError, linkBeacon } = data
 
   const [search, setSearch] = useState('')
   const [zoneFilter, setZoneFilter] = useState<string>('all')
   const [statusFilter, setStatusFilter] = useState<string>('all')
   const [modalAsset, setModalAsset] = useState<TrackedAsset | null>(null)
+
+  // Dispositivos que algum Gateway está enxergando agora, mas que ainda não correspondem
+  // a nenhum Beacon já cadastrado — candidatos prováveis pra vincular a um novo ativo.
+  const unrecognizedDevices = useMemo(() => {
+    const knownMacs = new Set(beacons.map((beacon) => beacon.mac))
+    return Array.from(zoneByMac.values()).filter((device) => !knownMacs.has(device.mac))
+  }, [zoneByMac, beacons])
 
   const filteredAssets = useMemo(() => {
     const term = search.trim().toLowerCase()
@@ -178,7 +185,12 @@ export function AssetDashboard({ data }: AssetDashboardProps) {
         </table>
       </div>
 
-      <AssetModal asset={modalAsset} onClose={() => setModalAsset(null)} onSubmit={handleLinkBeacon} />
+      <AssetModal
+        asset={modalAsset}
+        onClose={() => setModalAsset(null)}
+        onSubmit={handleLinkBeacon}
+        unrecognizedDevices={unrecognizedDevices}
+      />
     </div>
   )
 }

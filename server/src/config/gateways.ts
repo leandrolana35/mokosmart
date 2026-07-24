@@ -10,7 +10,7 @@ export interface GatewayConfig {
 export const GATEWAY_CONFIG: GatewayConfig[] = [
   { mac: 'ac233fa00001', zone: 'Almoxarifado' },
   { mac: 'ac233fa00002', zone: 'Oficina' },
-  { mac: 'ac233fa00003', zone: 'Escritório' },
+  { mac: 'fce8c0428d80', zone: 'Escritório' }, // Gateway MKGW3 real
 ]
 
 export const GATEWAY_ZONE_MAP: Record<string, string> = Object.fromEntries(
